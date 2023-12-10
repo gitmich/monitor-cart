@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Direction Control</title>
+    <style>
+        .button-container {
+            display: grid;
+            place-items: center;
+            height: 200px;
+            width: 200px;
+            grid-template-rows: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .button {
+            padding: 10px;
+            margin: 10px;
+            height: 100px;
+            width: 100px;
+        }
+        .up-button {
+            grid-row: 1;
+            grid-column: 2;
+        }
+        .down-button {
+            grid-row: 3;
+            grid-column: 2;
+        }
+        .left-button {
+            grid-row: 2;
+            grid-column: 1;
+        }
+        .right-button {
+            grid-row: 2;
+            grid-column: 3;
+        }
+    </style>
+    <script>
+        function handleMouseDown(direction) {
+            fetch(`/move/${direction}/down`)
+                .then(response => response.text())
+                .then(data => console.log(data));
+        }
+
+        function handleMouseUp(direction) {
+            fetch(`/move/${direction}/up`)
+                .then(response => response.text())
+                .then(data => console.log(data));
+        }
+    </script>
+</head>
+<body>
+    <h1>Direction Control</h1>
+    <div class="button-container">
+        <button class="button up-button" onmousedown="handleMouseDown('up')" onmouseup="handleMouseUp('up')">Up</button>
+        <button class="button left-button" onmousedown="handleMouseDown('left')" onmouseup="handleMouseUp('left')">Left</button>
+        <button class="button down-button" onmousedown="handleMouseDown('down')" onmouseup="handleMouseUp('down')">Down</button>
+        <button class="button right-button" onmousedown="handleMouseDown('right')" onmouseup="handleMouseUp('right')">Right</button>
+    </div>
+</body>
+</html>
+
