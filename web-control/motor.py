@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 def init_motor():
+    global Motor1A, Motor1B, Motor2A, Motor2B
     # 設置 GPIO 針腳模式為 BCM
     GPIO.setmode(GPIO.BCM)
     # 定義 L298N 的 GPIO 針腳
