@@ -50,6 +50,9 @@
     </script>
 </head>
 <body>
+    <h1> Pi Camera Live Stream</h1>
+    <img src="{{ url_for('video_feed') }}" alt="Pi Camera Stream">
+
     <h1>Direction Control</h1>
     <div class="button-container">
         <button class="button up-button" onmousedown="handleMouseDown('up')" onmouseup="handleMouseUp('up')" ontouchstart="handleMouseDown('up')" ontouchend="handleMouseUp('up')">Up</button>
