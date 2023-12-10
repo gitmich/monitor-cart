@@ -5,7 +5,7 @@ import motor
 import picamera
 import threading
 import io, time
-
+import sg90
 
 app = Flask(__name__)
 
@@ -72,11 +72,21 @@ if __name__ == '__main__':
     try:
         t = threading.Thread(target=generate_camera_stream)
         t.start()
+        motor.init_motor()
+        sg90.init_servo()
+        sg90.set_servo_angle(90)
         #app.run(host='0.0.0.0', port=5000, debug=True)
         app.run(host='0.0.0.0', port=5000)
+        time.sleep(5)
+        sg90.set_servo_angle(130)
+
     except Exception as e:
         print(e)
         GPIO.cleanup()
+        sg90.close_servo()
+        motor.close_motor()
     except KeyboardInterrupt:
         GPIO.cleanup()
+        sg90.close_servo()
+        motor.close_motor()
 
