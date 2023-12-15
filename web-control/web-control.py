@@ -50,6 +50,38 @@ def stream():
                 frame = cv2.resize(frame, (640, 480))
                 (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
                 boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                
+                # get the biggest box
+                if len(boxes) > 0:
+                    max_box = boxes[0]
+                    max_area = 0
+                    for box in boxes:
+                        area = (box[2] - box[0]) * (box[3] - box[1])
+                        if area > max_area:
+                            max_area = area
+                            max_box = box
+                    (xA, yA, xB, yB) = max_box
+                    # draw the bounding box
+                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                    # calculate the center of the box
+                    center_x = (xA + xB) / 2
+                    center_y = (yA + yB) / 2
+                    # calculate the angle
+                    angle_x = (center_x - 320) / 320 * 60
+                    angle_y = (center_y - 240) / 240 * 60
+                    # set the angle of the servo
+                    sg90.set_servo_angle(90 + angle_x)
+                    
+                    # set the speed of the motor
+                    # if angle_y > 0:
+                    #     motor.forward()
+                    #     motor.set_speed(100 - angle_y)
+                    # else:
+                    #     motor.backward()
+                    #     motor.set_speed(100 + angle_y)
+                else:
+                    # motor.stop()
+                    print('no people detected')
 
                 # draw the bounding boxes
                 for (xA, yA, xB, yB) in boxes:
