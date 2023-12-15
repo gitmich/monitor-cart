@@ -5,7 +5,7 @@ import motor
 import picamera
 import threading
 import io, time
-import sg90
+import sg90, hcsr04
 import numpy as np
 import cv2
 
@@ -128,12 +128,13 @@ if __name__ == '__main__':
         t.start()
         motor.init_motor()
         sg90.init_servo()
+        hcsr04.init_hcsr04()
         sg90.set_servo_angle(90)
+        #dis = hcsr04.distance()
+        #print(dis)
         #app.run(host='0.0.0.0', port=5000, debug=True)
         app.run(host='0.0.0.0', port=5000)
-        time.sleep(5)
-        sg90.set_servo_angle(130)
-
+        #time.sleep(5)
     except Exception as e:
         print(e)
         GPIO.cleanup()
