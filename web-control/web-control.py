@@ -6,21 +6,26 @@ import picamera
 import threading
 import io, time
 import sg90
+import numpy as np
+import cv2
 
 app = Flask(__name__)
 
 frame = None
 lock = threading.Lock()
 
+# initialize the HOG descriptor/person detector
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
 def generate_camera_stream():
     global frame
     with picamera.PiCamera() as camera:
-        # 設置相機參數
+        # set camera parameters
         camera.resolution = (640, 480)
         camera.rotation = 180
         #camera.framerate = 24
-        time.sleep(2)  # 讓相機預熱
+        time.sleep(2)  # wait for the camera to initialize
 
         stream = io.BytesIO()
         for _ in camera.capture_continuous(stream, 'jpeg', use_video_port=True):
@@ -39,8 +44,25 @@ def stream():
     while True:
         with lock:
             if frame:
+                # detect people in the image
+                frame = np.frombuffer(frame, dtype=np.uint8)
+                frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+                frame = cv2.resize(frame, (640, 480))
+                (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
+                boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+
+                # draw the bounding boxes
+                for (xA, yA, xB, yB) in boxes:
+                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                # encode as a jpeg image and return it
+                ret, jpeg = cv2.imencode('.jpg', frame)
+                frame = jpeg.tobytes()
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            else:
+                yield (b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                
         time.sleep(0.1) 
 
 
