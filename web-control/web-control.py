@@ -69,9 +69,13 @@ def stream():
                     # calculate the angle
                     angle_x = (center_x - 320) / 320 * 60
                     angle_y = (center_y - 240) / 240 * 60
-                    # set the angle of the servo
-                    sg90.set_servo_angle(90 + angle_x)
-                    
+                    # get the distance from the ultrasonic sensor every 3 seconds
+                    if time.time() - start_time > 3:
+                        # set the angle of the servo
+                        sg90.set_servo_angle(90 + angle_x)
+                        start_time = time.time()
+                        dist = hcsr04.distance()
+                        print(f"Distance: {dist:.2f} cm")
                     # set the speed of the motor
                     # if angle_y > 0:
                     #     motor.forward()
