@@ -72,7 +72,7 @@ def stream():
                     # get the distance from the ultrasonic sensor every 3 seconds
                     if time.time() - start_time > 3:
                         # set the angle of the servo
-                        sg90.set_servo_angle(90 + angle_x)
+                        sg90.set_servo_angle(90 - angle_x)
                         start_time = time.time()
                         dist = hcsr04.distance()
                         print(f"Distance: {dist:.2f} cm")
