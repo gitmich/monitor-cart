@@ -31,23 +31,26 @@ def distance():
     # 紀錄發送信號的時間
     while GPIO.input(ECHO) == 0:
         start_time = time.time()
-        if start_time - stop_time > 3:
+        if start_time - stop_time > 1:
             print("Sending Time out")
-            GPIO.cleanup() 
+            #GPIO.cleanup() 
             #return -1
             break
 
+    stop_time = time.time()
 
     # 紀錄接收到回聲的時間
     while GPIO.input(ECHO) == 1:
         stop_time = time.time()
-        if stop_time - start_time > 3:
+        if stop_time - start_time > 1:
             print("Receiving Time out")
-            GPIO.cleanup()
+            #GPIO.cleanup()
             #return -2
             break
 
     # 計算回聲的時間差
+    print(f"start_time: {start_time}")
+    print(f"stop_time: {stop_time}")
     time_elapsed = stop_time - start_time
     # 聲音速度 (34300 cm/s) 乘以時間差，然後除以 2 (來回距離)
     distance = (time_elapsed * 34300) / 2
