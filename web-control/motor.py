@@ -45,6 +45,27 @@ def right():
     GPIO.output(Motor2A, GPIO.HIGH)
     GPIO.output(Motor2B, GPIO.LOW)
 
+def left_angle(angle):
+    move_time = angle / 360 * 2
+    print(f"left move_time: {move_time}")
+    left()
+    time.sleep(move_time)
+    stop()
+    
+def right_angle(angle):
+    move_time = angle / 360 * 2
+    print(f"right move_time: {move_time}")
+    right()
+    time.sleep(move_time)
+    stop()
+    
+def look_target(angle):
+    if angle < 0:
+        print("left")
+        left_angle(abs(angle))
+    else:
+        print("right")
+        right_angle(abs(angle))
 
 def stop():
     GPIO.output(Motor1A, GPIO.LOW)
