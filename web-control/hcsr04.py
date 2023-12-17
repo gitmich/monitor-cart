@@ -19,6 +19,12 @@ def close_hcsr04():
     GPIO.cleanup()
 
 def distance():
+    global TRIG
+    global ECHO
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(TRIG, GPIO.OUT)
+    GPIO.setup(ECHO, GPIO.IN)
+
     # 發送高電平信號到 TRIG
     GPIO.output(TRIG, True)
     # 保持信號 10 us
@@ -31,10 +37,18 @@ def distance():
     # 紀錄發送信號的時間
     while GPIO.input(ECHO) == 0:
         start_time = time.time()
+        if start_time - stop_time > 1:
+            print("Sending Time out")
+            break
+
 
     # 紀錄接收到回聲的時間
     while GPIO.input(ECHO) == 1:
         stop_time = time.time()
+        if stop_time - start_time > 1:
+            print("Receiving Time out")
+            break
+
 
     # 計算回聲的時間差
     time_elapsed = stop_time - start_time

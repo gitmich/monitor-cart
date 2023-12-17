@@ -12,7 +12,12 @@ import cv2
 app = Flask(__name__)
 
 frame = None
-lock = threading.Lock()
+camera_thread_lock = threading.Lock()
+distance = None
+distance_lock = threading.Lock()
+scan_distance_time = time.time()
+get_aim_distance_running = False
+
 
 # initialize the HOG descriptor/person detector
 hog = cv2.HOGDescriptor()
@@ -29,7 +34,7 @@ def generate_camera_stream():
 
         stream = io.BytesIO()
         for _ in camera.capture_continuous(stream, 'jpeg', use_video_port=True):
-            with lock:
+            with camera_thread_lock:
                 stream.seek(0)
                 frame = stream.read()
             stream.seek(0)
@@ -39,10 +44,50 @@ def generate_camera_stream():
 def index():
     return render_template('index.html')
 
+def measure_distance_continuously():
+    global distance
+    while True:
+        # 測量距離的代碼...
+        new_distance = hcsr04.distance()
+
+        with distance_lock:
+            distance = new_distance
+
+        time.sleep(0.5)  # 或根據需要調整延遲時間
+
+
+def get_aim_distance(xA, yA, xB, yB):
+    global scan_distance_time
+    global get_aim_distance_running
+    
+    get_aim_distance_running = True
+    # calculate the center of the box
+    center_x = (xA + xB) / 2
+    center_y = (yA + yB) / 2
+    # calculate the angle
+    angle_x = (center_x - 320) / 320 * 60
+    angle_y = (center_y - 240) / 240 * 60
+    # get the distance from the ultrasonic sensor every 3 seconds
+    if time.time() - scan_distance_time > 3:
+        # set the angle of the servo
+        sg90.set_servo_angle(90 - angle_x)
+        scan_distance_time = time.time()
+        dist = hcsr04.distance()
+        print(f"Distance: {dist:.2f} cm")
+        
+    # set the speed of the motor
+    # if angle_y > 0:
+    #     motor.forward()
+    #     motor.set_speed(100 - angle_y)
+    # else:
+    #     motor.backward()
+    #     motor.set_speed(100 + angle_y)
+    get_aim_distance_running = False
+
 def stream():
     global frame
     while True:
-        with lock:
+        with camera_thread_lock:
             if frame:
                 # detect people in the image
                 frame = np.frombuffer(frame, dtype=np.uint8)
@@ -63,26 +108,10 @@ def stream():
                     (xA, yA, xB, yB) = max_box
                     # draw the bounding box
                     cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
-                    # calculate the center of the box
-                    center_x = (xA + xB) / 2
-                    center_y = (yA + yB) / 2
-                    # calculate the angle
-                    angle_x = (center_x - 320) / 320 * 60
-                    angle_y = (center_y - 240) / 240 * 60
-                    # get the distance from the ultrasonic sensor every 3 seconds
-                    if time.time() - start_time > 3:
-                        # set the angle of the servo
-                        sg90.set_servo_angle(90 - angle_x)
-                        start_time = time.time()
-                        dist = hcsr04.distance()
-                        print(f"Distance: {dist:.2f} cm")
-                    # set the speed of the motor
-                    # if angle_y > 0:
-                    #     motor.forward()
-                    #     motor.set_speed(100 - angle_y)
-                    # else:
-                    #     motor.backward()
-                    #     motor.set_speed(100 + angle_y)
+                    # aim the target and get the distance from the ultrasonic sensor
+                    if get_aim_distance_running == False:
+                        get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
+                        get_aim_distance_threading.start()
                 else:
                     # motor.stop()
                     print('no people detected')
@@ -99,7 +128,9 @@ def stream():
                 yield (b'--frame\r\n'
                         b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
                 
-        time.sleep(0.1) 
+        time.sleep(0.1)
+    get_aim_distance_threading.join()
+    
 
 
 @app.route('/video_feed')
@@ -128,8 +159,8 @@ def move(direction, action):
 
 if __name__ == '__main__':
     try:
-        t = threading.Thread(target=generate_camera_stream)
-        t.start()
+        camera_thread = threading.Thread(target=generate_camera_stream)
+        camera_thread.start()
         motor.init_motor()
         sg90.init_servo()
         hcsr04.init_hcsr04()
