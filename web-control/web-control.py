@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 frame = None
 camera_thread_lock = threading.Lock()
-distance = None
+distance = 0
 distance_lock = threading.Lock()
 scan_distance_time = time.time()
 get_aim_distance_running = False
@@ -74,7 +74,8 @@ def get_aim_distance(xA, yA, xB, yB):
         scan_distance_time = time.time()
         dist = hcsr04.distance()
         print(f"Distance: {dist:.2f} cm")
-        
+        with distance_lock:
+            distance = dist
     # set the speed of the motor
     # if angle_y > 0:
     #     motor.forward()
