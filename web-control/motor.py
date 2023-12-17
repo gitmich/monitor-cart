@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
+# The motor speed: 18 cm/sec
+
 def init_motor():
     global Motor1A, Motor1B, Motor2A, Motor2B
     # 設置 GPIO 針腳模式為 BCM
@@ -75,12 +77,17 @@ def stop():
 
 if __name__ == '__main__':
     try:
+        init_motor()
         while True:
             cmd = input("Enter '1' to move forward, '2' to move backward: ")
             if cmd == '1':
-                forward(3)
+                forward()
+                time.sleep(0.5)
+                stop()
             elif cmd == '2':
-                backward(3)
+                backward()
+                time.sleep(0.5)
+                stop()
 
     except KeyboardInterrupt:
         GPIO.cleanup()

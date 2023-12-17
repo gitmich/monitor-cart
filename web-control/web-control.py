@@ -55,18 +55,49 @@ def measure_distance_continuously():
 
         time.sleep(0.5)  # 或根據需要調整延遲時間
 
+def check_distance():
+    global distance
+    min_distance = 20
+    max_distance = 30
+    limit_distance = 100
+    # speed: 18 cm/sec
+    speed = 18
+    
+    with distance_lock:
+        if distance < min_distance:
+            print(f"distance: {distance:.2f}")
+            print(f"min_distance: {min_distance:.2f}")
+            move_time = (min_distance - distance)/speed
+            print(f"backward move_time: {move_time:.2f}")
+            motor.backward()
+            time.sleep(move_time)
+            motor.stop()
+        elif distance > max_distance and distance < limit_distance:
+            print(f"distance: {distance:.2f}")
+            print(f"max_distance: {max_distance:.2f}")
+            move_time = (distance - max_distance)/speed
+            print(f"forward move_time: {move_time:.2f}")
+            motor.forward()
+            time.sleep(move_time)
+            motor.stop()
+        else:
+            print(f"distance: {distance:.2f}")
+            print("stop.........")
+            motor.stop()
+    time.sleep(0.1)
 
 def get_aim_distance(xA, yA, xB, yB):
     global scan_distance_time
     global get_aim_distance_running
+    global distance
     
     get_aim_distance_running = True
     # calculate the center of the box
     center_x = (xA + xB) / 2
     center_y = (yA + yB) / 2
     # calculate the angle
-    angle_x = (center_x - 320) / 320 * 60
-    angle_y = (center_y - 240) / 240 * 60
+    angle_x = (center_x - 320) / 320 * 30
+    angle_y = (center_y - 240) / 240 * 30
     # get the distance from the ultrasonic sensor every 3 seconds
     if time.time() - scan_distance_time > 3:
         # set the angle of the servo
@@ -76,6 +107,14 @@ def get_aim_distance(xA, yA, xB, yB):
         print(f"Distance: {dist:.2f} cm")
         with distance_lock:
             distance = dist
+        
+        if abs(angle_x) > 10:
+            print(f"angle_x: {angle_x:.2f}")
+            motor.look_target(angle_x)
+            sg90.set_servo_angle(90)
+        
+        check_distance()
+        
     # set the speed of the motor
     # if angle_y > 0:
     #     motor.forward()
@@ -87,39 +126,81 @@ def get_aim_distance(xA, yA, xB, yB):
 
 def stream():
     global frame
+    threshold = 0.75
     while True:
+        # reset box and weight
+        boxes = []
+        max_box = []
+        max_weight = 0
+        
         with camera_thread_lock:
             if frame:
                 # detect people in the image
                 frame = np.frombuffer(frame, dtype=np.uint8)
                 frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
                 frame = cv2.resize(frame, (640, 480))
-                (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
-                boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                # (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
+                (rects, weights) = hog.detectMultiScale(frame, winStride=(6, 6),padding=(2, 2), scale=1.1)
+                # filter the target with low confidence
+                filtered_rects = [rect for rect, weight in zip(rects, weights) if weight > threshold]
+                # boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in filtered_rects])
                 
-                # get the biggest box
+                # get the biggest box and weight
                 if len(boxes) > 0:
-                    max_box = boxes[0]
-                    max_area = 0
-                    for box in boxes:
-                        area = (box[2] - box[0]) * (box[3] - box[1])
-                        if area > max_area:
-                            max_area = area
+                    # max_box = boxes[0]
+                    # max_weight = 0
+                    for box, weight in zip(boxes, weights):
+                        if weight > max_weight:
+                            max_weight = weight
                             max_box = box
                     (xA, yA, xB, yB) = max_box
                     # draw the bounding box
-                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                    # cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                    # draw the weight
                     # aim the target and get the distance from the ultrasonic sensor
                     if get_aim_distance_running == False:
                         get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
                         get_aim_distance_threading.start()
                 else:
                     # motor.stop()
-                    print('no people detected')
+                    # print('no people detected')
+                    i = 1
+                
+                # if the max_box is not empty then draw the bounding box and weight
+                if len(max_box) > 0:
+                    # print(f"len(max_box): {len(max_box)}")
+                    (xA, yA, xB, yB) = max_box
+                    # draw the bounding box
+                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                    # draw the weight
+                    cv2.putText(frame, f"{max_weight:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                
+                
+                # get the biggest box
+                # if len(boxes) > 0:
+                #     max_box = boxes[0]
+                #     max_area = 0
+                #     for box in boxes:
+                #         area = (box[2] - box[0]) * (box[3] - box[1])
+                #         if area > max_area:
+                #             max_area = area
+                #             max_box = box
+                #     (xA, yA, xB, yB) = max_box
+                #     # draw the bounding box
+                #     cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                #     # aim the target and get the distance from the ultrasonic sensor
+                #     if get_aim_distance_running == False:
+                #         get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
+                #         get_aim_distance_threading.start()
+                # else:
+                #     # motor.stop()
+                #     print('no people detected')
 
                 # draw the bounding boxes
-                for (xA, yA, xB, yB) in boxes:
-                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                # for (xA, yA, xB, yB) in boxes:
+                #     cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+
                 # encode as a jpeg image and return it
                 ret, jpeg = cv2.imencode('.jpg', frame)
                 frame = jpeg.tobytes()
@@ -137,6 +218,7 @@ def stream():
 @app.route('/video_feed')
 def video_feed():
     return Response(stream(),mimetype='multipart/x-mixed-replace; boundary=frame')
+    # return 0
 
 
 @app.route('/move/<direction>/<action>')
