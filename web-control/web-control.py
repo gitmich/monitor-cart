@@ -57,11 +57,11 @@ def measure_distance_continuously():
 
 def check_distance():
     global distance
-    min_distance = 20
-    max_distance = 30
+    min_distance = 30
+    max_distance = 50
     limit_distance = 100
     # speed: 18 cm/sec
-    speed = 18
+    speed = 30
     
     with distance_lock:
         if distance < min_distance:
@@ -115,17 +115,11 @@ def get_aim_distance(xA, yA, xB, yB):
         
         check_distance()
         
-    # set the speed of the motor
-    # if angle_y > 0:
-    #     motor.forward()
-    #     motor.set_speed(100 - angle_y)
-    # else:
-    #     motor.backward()
-    #     motor.set_speed(100 + angle_y)
     get_aim_distance_running = False
 
 def stream():
     global frame
+    global get_aim_distance_running
     threshold = 0.75
     while True:
         # reset box and weight
@@ -176,30 +170,6 @@ def stream():
                     # draw the weight
                     cv2.putText(frame, f"{max_weight:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                
-                # get the biggest box
-                # if len(boxes) > 0:
-                #     max_box = boxes[0]
-                #     max_area = 0
-                #     for box in boxes:
-                #         area = (box[2] - box[0]) * (box[3] - box[1])
-                #         if area > max_area:
-                #             max_area = area
-                #             max_box = box
-                #     (xA, yA, xB, yB) = max_box
-                #     # draw the bounding box
-                #     cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
-                #     # aim the target and get the distance from the ultrasonic sensor
-                #     if get_aim_distance_running == False:
-                #         get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
-                #         get_aim_distance_threading.start()
-                # else:
-                #     # motor.stop()
-                #     print('no people detected')
-
-                # draw the bounding boxes
-                # for (xA, yA, xB, yB) in boxes:
-                #     cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
 
                 # encode as a jpeg image and return it
                 ret, jpeg = cv2.imencode('.jpg', frame)

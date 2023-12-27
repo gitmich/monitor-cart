@@ -48,14 +48,16 @@ def right():
     GPIO.output(Motor2B, GPIO.LOW)
 
 def left_angle(angle):
-    move_time = angle / 360 * 2
+    global angle_speed
+    move_time = angle / 360 * angle_speed
     print(f"left move_time: {move_time}")
     left()
     time.sleep(move_time)
     stop()
     
 def right_angle(angle):
-    move_time = angle / 360 * 2
+    global angle_speed
+    move_time = angle / 360 * angle_speed
     print(f"right move_time: {move_time}")
     right()
     time.sleep(move_time)
