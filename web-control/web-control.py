@@ -134,7 +134,7 @@ def stream():
                 frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
                 frame = cv2.resize(frame, (640, 480))
                 # (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
-                (rects, weights) = hog.detectMultiScale(frame, winStride=(6, 6),padding=(2, 2), scale=1.1)
+                (rects, weights) = hog.detectMultiScale(frame, winStride=(6, 6),padding=(6, 6), scale=1.1)
                 # filter the target with low confidence
                 filtered_rects = [rect for rect, weight in zip(rects, weights) if weight > threshold]
                 # boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
