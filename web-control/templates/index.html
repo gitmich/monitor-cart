@@ -34,6 +34,18 @@
             grid-row: 2;
             grid-column: 3;
         }
+        .middle-button {
+            grid-row: 2;
+            grid-column: 2;
+        }
+        .tracking-off {
+            background-color: white;
+            color: black;
+        }
+        .tracking-on {
+            background-color: blue;
+            color: white;
+        }
     </style>
     <script>
         function handleMouseDown(direction) {
@@ -47,6 +59,20 @@
                 .then(response => response.text())
                 .then(data => console.log(data));
         }
+        function toggleTracking() {
+            fetch('/toggle_tracking')
+                .then(response => response.json())
+                .then(data => {
+                    const button = document.getElementById('trackingButton');
+                    if (data.tracking_mode) {
+                        button.classList.remove('tracking-off');
+                        button.classList.add('tracking-on');
+                    } else {
+                        button.classList.remove('tracking-on');
+                        button.classList.add('tracking-off');
+                    }
+                });
+        }
     </script>
 </head>
 <body>
@@ -59,7 +85,9 @@
         <button class="button left-button" onmousedown="handleMouseDown('left')" onmouseup="handleMouseUp('left')" onmouseup="handleMouseUp('left')" ontouchstart="handleMouseDown('left')" ontouchend="handleMouseUp('left')">Left</button>
         <button class="button down-button" onmousedown="handleMouseDown('down')" onmouseup="handleMouseUp('down')" onmouseup="handleMouseUp('down')" ontouchstart="handleMouseDown('down')" ontouchend="handleMouseUp('down')">Down</button>
         <button class="button right-button" onmousedown="handleMouseDown('right')" onmouseup="handleMouseUp('right')" onmouseup="handleMouseUp('right')" ontouchstart="handleMouseDown('right')" ontouchend="handleMouseUp('right')">Right</button>
+        <button id="trackingButton" class="tracking-off middle-button button" onclick="toggleTracking()">Tracking Mode</button>
     </div>
+
 </body>
 </html>
 

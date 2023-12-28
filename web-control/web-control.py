@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, jsonify
 import RPi.GPIO as GPIO
 import motor
 import picamera
@@ -17,6 +17,7 @@ distance = 0
 distance_lock = threading.Lock()
 scan_distance_time = time.time()
 get_aim_distance_running = False
+tracking_mode = False
 
 
 # initialize the HOG descriptor/person detector
@@ -133,44 +134,48 @@ def stream():
                 frame = np.frombuffer(frame, dtype=np.uint8)
                 frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
                 frame = cv2.resize(frame, (640, 480))
-                # (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
-                (rects, weights) = hog.detectMultiScale(frame, winStride=(6, 6),padding=(6, 6), scale=1.1)
-                # filter the target with low confidence
-                filtered_rects = [rect for rect, weight in zip(rects, weights) if weight > threshold]
-                # boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
-                boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in filtered_rects])
                 
-                # get the biggest box and weight
-                if len(boxes) > 0:
-                    # max_box = boxes[0]
-                    # max_weight = 0
-                    for box, weight in zip(boxes, weights):
-                        if weight > max_weight:
-                            max_weight = weight
-                            max_box = box
-                    (xA, yA, xB, yB) = max_box
-                    # draw the bounding box
-                    # cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
-                    # draw the weight
-                    # aim the target and get the distance from the ultrasonic sensor
-                    if get_aim_distance_running == False:
-                        get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
-                        get_aim_distance_threading.start()
-                else:
-                    # motor.stop()
-                    # print('no people detected')
-                    i = 1
+                # -----
+                if tracking_mode == True:
+                    # (rects, weights) = hog.detectMultiScale(frame, winStride=(4, 4),padding=(8, 8), scale=1.05)
+                    (rects, weights) = hog.detectMultiScale(frame, winStride=(6, 6),padding=(6, 6), scale=1.1)
+                    # filter the target with low confidence
+                    filtered_rects = [rect for rect, weight in zip(rects, weights) if weight > threshold]
+                    # boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+                    boxes = np.array([[x, y, x + w, y + h] for (x, y, w, h) in filtered_rects])
+                    
+                    # get the biggest box and weight
+                    if len(boxes) > 0:
+                        # max_box = boxes[0]
+                        # max_weight = 0
+                        for box, weight in zip(boxes, weights):
+                            if weight > max_weight:
+                                max_weight = weight
+                                max_box = box
+                        (xA, yA, xB, yB) = max_box
+                        # draw the bounding box
+                        # cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                        # draw the weight
+                        # aim the target and get the distance from the ultrasonic sensor
+                        if get_aim_distance_running == False:
+                            get_aim_distance_threading =  threading.Thread(target=get_aim_distance, args=(xA, yA, xB, yB))
+                            get_aim_distance_threading.start()
+                    else:
+                        # motor.stop()
+                        # print('no people detected')
+                        i = 1
+                    
+                    # if the max_box is not empty then draw the bounding box and weight
+                    if len(max_box) > 0:
+                        # print(f"len(max_box): {len(max_box)}")
+                        (xA, yA, xB, yB) = max_box
+                        # draw the bounding box
+                        cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+                        # draw the weight
+                        cv2.putText(frame, f"{max_weight:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                # if the max_box is not empty then draw the bounding box and weight
-                if len(max_box) > 0:
-                    # print(f"len(max_box): {len(max_box)}")
-                    (xA, yA, xB, yB) = max_box
-                    # draw the bounding box
-                    cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
-                    # draw the weight
-                    cv2.putText(frame, f"{max_weight:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                # -----
                 
-
                 # encode as a jpeg image and return it
                 ret, jpeg = cv2.imencode('.jpg', frame)
                 frame = jpeg.tobytes()
@@ -208,6 +213,13 @@ def move(direction, action):
         print("stop.........")
         motor.stop()
     return f"{direction} button {action}"
+
+@app.route('/toggle_tracking')
+def toggle_tracking():
+    global tracking_mode
+    tracking_mode = not tracking_mode
+    print(f"tracking_mode: {tracking_mode}")
+    return jsonify({'tracking_mode': tracking_mode})
 
 
 if __name__ == '__main__':
