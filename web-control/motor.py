@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 # The motor speed: 18 cm/sec
+angle_speed = 1
 
 def init_motor():
     global Motor1A, Motor1B, Motor2A, Motor2B
