@@ -62,7 +62,7 @@ def check_distance():
     max_distance = 50
     limit_distance = 100
     # speed: 18 cm/sec
-    speed = 30
+    speed = 18
     
     with distance_lock:
         if distance < min_distance:
