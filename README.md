@@ -109,12 +109,13 @@ python web-control.py
 
 ## UI Description
 ![UI](https://github.com/gitmich/monitor-cart/assets/4426184/668f0cab-3a62-4683-b143-961781ff00f7)
-The upper part is the Pi Camera Live Stream. Users can watch the camera's view in this window.
 
+The upper part is the Pi Camera Live Stream. Users can watch the camera's view in this window.
 The lower part consists of functional buttons. The Up, Down, Left, and Right buttons control the direction of the cart's movement. The central button enables the Tracking Mode. When Tracking Mode is enabled, the monitoring car will track people.
 
-## Demo
-[<img src="https://github.com/gitmich/monitor-cart/assets/4426184/668f0cab-3a62-4683-b143-961781ff00f7" width="50%">](https://youtu.be/Ib0iq3pmF8I "Monitor cart demo")
+## Demo Video
+https://github.com/gitmich/monitor-cart/assets/4426184/43cab267-4a0c-45ba-b141-e983f521368a
+
 
 
 ## Reference data
