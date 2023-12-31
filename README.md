@@ -1,6 +1,16 @@
-# 尋人監控車
+# Baby Monitor Car 尋人監控車
 
 ## Overview
+The baby monitor car is a concept born out of necessity. Currently, the baby monitors available on the market can only be quietly placed in a specific corner, watching over the baby. This suffices when the baby is not yet crawling around, but once the baby starts to crawl, traditional baby monitors become ineffective. Hence, the idea of an autonomous, baby-following monitor was conceived.
+
+It's a miraculous device that can monitor a crawling or moving baby, allowing moms to focus on watching dramas and dads to concentrate on gaming and treasure hunting.
+
+## The features
+- Able to recognize the baby and move along with it.
+- The camera lens should be directed at the baby.
+- When the baby notices the monitor, it should be able to avoid the baby and maintain a certain distance to prevent being grabbed.
+- The monitor can be connected to a smartphone, allowing direct viewing of the baby being monitored.
+- The movement of the vehicle and the direction of the camera can be controlled directly from the smartphone.
 
 ## Required Components
 ### Software
