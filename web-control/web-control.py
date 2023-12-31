@@ -58,11 +58,12 @@ def measure_distance_continuously():
 
 def check_distance():
     global distance
-    min_distance = 30
+    min_distance = 40
     max_distance = 50
     limit_distance = 100
     # speed: 18 cm/sec
-    speed = 18
+    # speed fix parameter: 1.4
+    speed = 14 * 1.4
     
     with distance_lock:
         if distance < min_distance:
@@ -121,6 +122,7 @@ def get_aim_distance(xA, yA, xB, yB):
 def stream():
     global frame
     global get_aim_distance_running
+    global distance
     threshold = 0.75
     while True:
         # reset box and weight
@@ -172,7 +174,7 @@ def stream():
                         # draw the bounding box
                         cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
                         # draw the weight
-                        cv2.putText(frame, f"{max_weight:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                        cv2.putText(frame, f"{max_weight:.2f} -- {distance:.2f}", (xA, yA - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
                 # -----
                 
@@ -229,7 +231,12 @@ if __name__ == '__main__':
         motor.init_motor()
         sg90.init_servo()
         hcsr04.init_hcsr04()
+        sg90.set_servo_angle(10)
+        time.sleep(0.5)
+        sg90.set_servo_angle(170)
+        time.sleep(0.5)
         sg90.set_servo_angle(90)
+
         #dis = hcsr04.distance()
         #print(dis)
         #app.run(host='0.0.0.0', port=5000, debug=True)
