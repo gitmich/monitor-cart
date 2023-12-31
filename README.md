@@ -113,6 +113,10 @@ The upper part is the Pi Camera Live Stream. Users can watch the camera's view i
 
 The lower part consists of functional buttons. The Up, Down, Left, and Right buttons control the direction of the cart's movement. The central button enables the Tracking Mode. When Tracking Mode is enabled, the monitoring car will track people.
 
+## Demo
+[<img src="https://github.com/gitmich/monitor-cart/assets/4426184/668f0cab-3a62-4683-b143-961781ff00f7" width="50%">](https://youtu.be/Ib0iq3pmF8I "Monitor cart demo")
+
+
 ## Reference data
 - Install OpenCV - https://hackmd.io/HV6hQ2PHSiWlrRsfxC10SA#Install-OpenCV
 - Install OpenCV on Raspberry Pi - https://qengineering.eu/install-opencv-on-raspberry-pi.html
